@@ -159,12 +159,13 @@ Only the object's id and the column you are searching on will be returned in JSO
    By default autocomplete uses method name as column name. Now it can be specified using column_name options
    `:column_name => 'name'`
 
-#### json encoder
-Autocomplete uses Yajl as JSON encoder/decoder, but you can specify your own
+#### dynamic filter
+If you want to use dynamic filter(where clause, scope, ...), it can be specified using a block.
 
     class ProductsController < Admin::BaseController
       autocomplete :brand, :name do |items|
-         CustomJSON::Encoder.encode(items)
+        # This block is executed on controller's instance context.
+        items.where("user_id = :user_id", :user_id => current_user.id).a_scope(params[:foo])
       end
     end
 
