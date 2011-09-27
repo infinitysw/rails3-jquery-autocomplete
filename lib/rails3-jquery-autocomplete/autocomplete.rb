@@ -30,18 +30,17 @@ module Rails3JQueryAutocomplete
     #
     #   f.text_field :brand_name, :autocomplete => autocomplete_brand_name_products_path
     #
-    #
-    # Yajl is used by default to encode results, if you want to use a different encoder
-    # you can specify your custom encoder via block
+    # You can specify your custom filter via block.
+    # The block is executed in a controller instance context.
     #
     # class ProductsController < Admin::BaseController
     #   autocomplete :brand, :name do |items|
-    #     CustomJSONEncoder.encode(items)
+    #     items.where("name = :name", :name => params[:name])
     #   end
     # end
     #
     module ClassMethods
-      def autocomplete(object, method, options = {})
+      def autocomplete(object, method, options = {}, &block)
         define_method("autocomplete_#{object}_#{method}") do
 
           method = options[:column_name] if options.has_key?(:column_name)
@@ -53,6 +52,8 @@ module Rails3JQueryAutocomplete
             class_name = options[:class_name] || object
             items = get_autocomplete_items(:model => get_object(class_name), \
               :options => options, :term => term, :method => method)
+            
+            items = self.instance_exec(items, &block) if block
           else
             items = {}
           end

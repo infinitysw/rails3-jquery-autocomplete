@@ -2,10 +2,20 @@ require 'test_helper'
 
 module Rails3JQueryAutocomplete
   class Rails3JQueryAutocompleteTest < ActionController::TestCase
-    ActorsController = Class.new(ActionController::Base)
-    ActorsController.autocomplete(:movie, :name)
 
+    class ::User
+      def id ; 1 end
+    end
     class ::Movie ; end
+
+    class ActorsController < ActionController::Base
+      def current_user
+        @user ||= User.new
+      end
+      autocomplete(:movie, :name, { :display_value => :name }) do |items|
+        items.where("user_id = :user_id", :user_id => current_user.id)
+      end
+    end
 
     context '#autocomplete_object_method' do
       setup do
@@ -24,6 +34,7 @@ module Rails3JQueryAutocomplete
         }) { @items }
 
         mock(@controller).json_for_autocomplete(@items, :name, nil)
+        mock(@items).where("user_id = :user_id", :user_id => @controller.current_user.id) { @items }
         get :autocomplete_movie_name, :term => 'query'
       end
 
